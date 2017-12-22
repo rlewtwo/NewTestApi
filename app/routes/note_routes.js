@@ -1,37 +1,49 @@
 
+const optionsOBJ  =
+{
+  options1 :
+    {
+      method: 'GET',
+      json: true,
+      uri: 'http://www.kanyerest.xyz/api/album/the_life_of_pablo'
+    },
+
+  options2 :
+    {
+      method: 'GET',
+      json: true,
+      uri: 'http://www.kanyerest.xyz/api/album/graduation'
+    }
+};
+
+
 const request = require('request')
+const rp = require('request-promise')
 module.exports = function(app, db) {
-  app.get('/api', (req, res) => {
-    request('http://www.kanyerest.xyz/api/album/the_life_of_pablo', function (error, response, body) {
-      // console.log('error:', error); // Print the error if one occurred
-      // console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-      let parsedBody = JSON.parse(body);
-      console.log('body:', typeof(parsedBody)); // Print the HTML for the Google homepage.
+
+  app.get('/wordsTest', async (req, res, next) => {
+
+    try {
+      const data = await rp(optionsOBJ.options1);
+      const songsUrlArr = [];
+
+      data.result.forEach(function(track){
+// code below does not work
+          songsUrlArr.push(await rp({uri: 'http://www.kanyerest.xyz/api/track/' + track.title}))
+      })
+        console.log('songsUrlArr', songsUrlArr)
+
+      // let allTracks = [await rp({uri: "http://www.kanyerest.xyz/api/track/champion"}), await rp({uri: "http://www.kanyerest.xyz/api/track/champion"})]
 
 
-      db.collection('notes').insert(parsedBody, (err, result) => {
-        console.log('ERR', err);
-        console.log('RESULT', typeof(result));
-        if (err) {
-          res.send({ 'error':`error is ${err}`});
-        } else {
-          res.send(result);
-        }
-      });
-    });
-    // make a request using request library (callback function)
-    // get that data back (console.log)
-    // save to the db (callback function) nested(nest with the top callback function if)
-    // send that data to clien
+      let test = await Promise.all(songsUrlArr)
+      console.log("TEST", test)
+
+      res.json(data);
+    } catch (e) {
+
+      console.log('this is error', e);
+      next(e)
+    }
   })
 };
-  // app.post('/api', (req, res) => {
-  //   const note = { text: req.body.body, title: req.body.title };
-    // db.collection('notes').insert(note, (err, result) => {
-    //   if (err) {
-    //     res.send({ 'error':`error is ${err}`});
-    //   } else {
-    //     res.send(result.ops[0]);
-    //   }
-    // });
-  // });
